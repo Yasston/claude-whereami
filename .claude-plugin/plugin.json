@@ -1,0 +1,20 @@
+{
+  "name": "whereami",
+  "version": "0.2.0",
+  "description": "Shows at a glance whether this session runs on your own machine or in a cloud container, and moves a cloud session back to your machine with /go-local",
+  "author": { "name": "Yassine" },
+  "userConfig": {
+    "workspaceRoot": {
+      "type": "string",
+      "title": "Local folder for repositories",
+      "description": "Where /go-local looks for (or clones) a repository on your machine when it isn't listed below: <folder>/<repository name>. Written for a shell, so $HOME works.",
+      "default": "$HOME/dev"
+    },
+    "workspaces": {
+      "type": "string",
+      "title": "Local checkouts",
+      "description": "owner/repo=folder pairs, separated by commas, for repositories kept elsewhere. Example: acme/shop=$HOME/work/shop",
+      "default": ""
+    }
+  }
+}

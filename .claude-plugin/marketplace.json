@@ -1,0 +1,13 @@
+{
+  "name": "whereami",
+  "description": "WhereAmI: see at a glance whether Claude Code runs on your machine or in a cloud container",
+  "owner": {
+    "name": "Yassine"
+  },
+  "plugins": [
+    {
+      "name": "whereami",
+      "source": "./"
+    }
+  ]
+}
