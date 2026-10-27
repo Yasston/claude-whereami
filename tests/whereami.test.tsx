@@ -77,3 +77,44 @@ test('/go-local on the laptop has nothing to move', async ($, on) => {
   expect(result.text).toContain('already runs on my-laptop')
   expect(result.context).toBeUndefined()
 })
+
+const PANE = {
+  plugin: 'whereami',
+  component: 'Pane',
+  requestId: 'whereami',
+  props: {
+    title: 'Where am I',
+    isFocused: false,
+    bodyColumns: 40,
+    placement: 'dock',
+    scroll: { offset: 0, bodyRows: 10 },
+    view: {},
+  },
+} as const
+
+test('the pane says LOCAL with no button on the laptop', async ($, on) => {
+  mock.env(on, { HOSTNAME: 'my-laptop' })
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ ...PANE, surface })
+    expect((await ui.find({ type: 'Text', text: /LOCAL/ }))?.text).toContain('LOCAL')
+    expect((await ui.find({ type: 'Text', text: /my-laptop/ }))?.text).toBe('On my-laptop')
+    expect(await ui.find({ type: 'Button', key: 'go-local' })).toBeUndefined()
+    await ui.unmount()
+  }
+})
+
+test('in the cloud, the pane\'s Go local puts /go-local in the prompt box', async ($, on) => {
+  mock.env(on, { HOSTNAME: 'runner-abc', CLAUDE_CODE_REMOTE: 'true' })
+  const filled: string[] = []
+  on('prompt.fill', (_, e) => {
+    filled.push(e.text)
+    return { isFilled: true }
+  })
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ ...PANE, surface })
+    expect((await ui.find({ type: 'Text', text: /CLOUD/ }))?.text).toContain('CLOUD')
+    await ui.press({ key: 'go-local' })
+    await ui.unmount()
+  }
+  expect(filled).toEqual(['/go-local', '/go-local'])
+})

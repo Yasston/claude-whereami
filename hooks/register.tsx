@@ -28,6 +28,10 @@ const getPlace = async ($: EngineInterface): Promise<Place> => {
   return place
 }
 
+// The pane shows in apps that draw panes (the desktop app, on the right) and
+// in a wide terminal; the band above the prompt covers the rest.
+const PANE = 'whereami'
+
 const PUSH_FIRST =
   'The person is moving this session to their own machine with `claude --teleport`, ' +
   'which needs the branch on GitHub. Now: commit all work in progress on the current ' +
@@ -51,11 +55,13 @@ export const register: Register = (on, options) => {
       description: 'Move this cloud session to your own machine: push the work, then the command to resume there',
     })
     $.ui.status(label(p))
+    void $.ui.open({ id: PANE, title: 'Where am I' })
     return next(e)
   })
 
   on('command.run', { command: 'whereami' }, async $ => {
     const p = await getPlace($)
+    await $.ui.open({ id: PANE, title: 'Where am I' })
     const id = p.sessionId === null ? '' : `\nCloud session: ${p.sessionId}`
     return { text: `${label(p)}${id}` }
   })
@@ -97,6 +103,29 @@ export const register: Register = (on, options) => {
       ].join('\n'),
       context: [PUSH_FIRST],
     }
+  })
+
+  on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
+    const p = await getPlace($)
+    const { Box, Button, Text } = $.ui.resolve(e)
+    const color = p.isCloud ? '#b45309' : '#15803d'
+    return (
+      <Box flexDirection="column">
+        <Box backgroundColor={color} paddingX={1}>
+          <Text color="#ffffff" bold>
+            {p.isCloud ? '☁ CLOUD' : '💻 LOCAL'}
+          </Text>
+        </Box>
+        <Text>{p.isCloud ? `Container ${p.machine}` : `On ${p.machine}`}</Text>
+        {p.isCloud ? (
+          <Button
+            key="go-local"
+            label="Go local"
+            onPress={() => $.prompt.fill({ text: '/go-local', mode: 'replace' })}
+          />
+        ) : null}
+      </Box>
+    )
   })
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {

@@ -1,6 +1,6 @@
 {
   "name": "whereami",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Shows at a glance whether this session runs on your own machine or in a cloud container, and moves a cloud session back to your machine with /go-local",
   "author": { "name": "Yassine" },
   "userConfig": {

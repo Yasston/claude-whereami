@@ -5,7 +5,9 @@ A Claude Code plugin that shows, at a glance, where the current session runs:
 - **💻 LOCAL on `<machine>`** — a green band above the prompt when Claude runs on your own machine (Remote Control included)
 - **☁ CLOUD container (`<name>`)** — an amber band when it runs in a cloud container
 
-The same text goes in the status line, and `/whereami` prints it.
+The same text goes in the status line, and `/whereami` prints it. Apps that draw plugin panes
+(the desktop app, on the right; a wide terminal) also get a small **Where am I** pane, with a
+**Go local** button in the cloud.
 
 ## Moving a cloud session back to your machine
 
