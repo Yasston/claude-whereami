@@ -53,13 +53,16 @@ Add marketplace with `Yasston/claude-whereami`, then Add plugin.
 
 ### In cloud sessions
 
-A cloud container never sees your machine's settings. To get the band there too, add these lines to
-your cloud environment's setup script (one environment covers every repository that uses it):
+A cloud container never sees your machine's settings. To get WhereAmI there too, add these lines to
+your cloud environment's setup script (one environment covers every repository that uses it). For a
+project's cloud threads, that's the environment chosen in Project settings → Environment.
 
 ```bash
 claude plugin marketplace add Yasston/claude-whereami
 claude plugin install whereami
 ```
+
+Put them before any `exit` in the script: lines after it never run.
 
 ## How it tells
 
