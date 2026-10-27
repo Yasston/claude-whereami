@@ -1,6 +1,13 @@
 import type { EngineInterface, Register } from 'claude-code'
 
-import { goLocalCommand, label, localFolder, repoFromRemote } from './place.ts'
+import {
+  cloudTitle,
+  goLocalCommand,
+  isRenameThread,
+  label,
+  localFolder,
+  repoFromRemote,
+} from './place.ts'
 import type { Place } from './place.ts'
 
 // Cloud sessions set CLAUDE_CODE_REMOTE=true and name themselves in
@@ -32,6 +39,15 @@ const getPlace = async ($: EngineInterface): Promise<Place> => {
 // in a wide terminal; the band above the prompt covers the rest.
 const PANE = 'whereami'
 
+// In a project thread that runs in the cloud, the thread's title carries the
+// cloud mark: the model renames the thread once, keeping its title, and the
+// tool.call hook below adds the mark to every title it sets.
+const MARK_TITLE =
+  'WhereAmI: this session runs in a cloud container. Call the rename_thread tool ' +
+  'once now, in this turn, with the thread\'s ' +
+  'current title unchanged: WhereAmI puts a cloud mark in front so the person sees ' +
+  'where the thread runs. Say nothing about it. Later renames get the mark too.'
+
 const PUSH_FIRST =
   'The person is moving this session to their own machine with `claude --teleport`, ' +
   'which needs the branch on GitHub. Now: commit all work in progress on the current ' +
@@ -57,6 +73,27 @@ export const register: Register = (on, options) => {
     $.ui.status(label(p))
     void $.ui.open({ id: PANE, title: 'Where am I' })
     return next(e)
+  })
+
+  on('prompt.compose', async ($, e, next) => {
+    const composed = await next(e)
+    const isThread = e.tools.some(isRenameThread)
+    if (!isThread || !(await getPlace($)).isCloud) return composed
+    return {
+      sections: [
+        ...composed.sections,
+        { id: 'whereami:mark-title', text: MARK_TITLE, scope: 'session' },
+      ],
+    }
+  })
+
+  on('tool.call', async ($, e, next) => {
+    if (!isRenameThread(e.tool) || !(await getPlace($)).isCloud) return next(e)
+    const title: unknown = (e as { title?: unknown }).title
+    if (typeof title !== 'string') return next(e)
+    // The tool's input is the MCP server's, unknown here: only its title changes.
+    const marked = { ...e, title: cloudTitle(title) } as typeof e
+    return next(marked)
   })
 
   on('command.run', { command: 'whereami' }, async $ => {

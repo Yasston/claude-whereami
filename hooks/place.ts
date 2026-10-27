@@ -63,3 +63,15 @@ export const goLocalCommand = (
     `cd "$D" && ${teleport}`
   )
 }
+
+/** The mark a cloud thread's title starts with, so the thread list shows it. */
+export const CLOUD_MARK = '☁'
+
+/** The title with the cloud mark in front, once. */
+export const cloudTitle = (title: string): string => {
+  const trimmed = title.trim()
+  return trimmed.startsWith(CLOUD_MARK) ? trimmed : `${CLOUD_MARK} ${trimmed}`
+}
+
+/** A project's rename-thread tool, whatever its server's prefix. */
+export const isRenameThread = (tool: string): boolean => /^mcp__.+__rename_thread$/.test(tool)

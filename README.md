@@ -9,6 +9,13 @@ The same text goes in the status line, and `/whereami` prints it. Apps that draw
 (the desktop app, on the right; a wide terminal) also get a small **Where am I** pane, with a
 **Go local** button in the cloud.
 
+## Cloud threads in a project
+
+In a project's thread that runs in the cloud, the thread's title starts with **☁**, so the
+thread list and the thread's header show it in any app, the desktop app included. WhereAmI asks
+Claude to rename the thread once, keeping its title, and puts the mark in front of every title
+the thread is given. Threads on your machine keep their titles as they are.
+
 ## Moving a cloud session back to your machine
 
 Started a session in the cloud by mistake? Type **`/go-local`** in it. Claude commits and

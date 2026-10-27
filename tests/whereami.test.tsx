@@ -1,5 +1,13 @@
 import { expect, mock, test } from 'claude-code/testing'
 
+const COMPOSE = {
+  model: 'm',
+  promptModel: 'm',
+  surfaces: [],
+  outputStyle: { name: 'default', isKeepingCodingInstructions: true },
+  traits: [],
+} as const
+
 const RUN = {
   command: 'go-local',
   args: '',
@@ -117,4 +125,49 @@ test('in the cloud, the pane\'s Go local puts /go-local in the prompt box', asyn
     await ui.unmount()
   }
   expect(filled).toEqual(['/go-local', '/go-local'])
+})
+
+test('in the cloud, a thread title gets the cloud mark, once', async ($, on) => {
+  mock.env(on, { HOSTNAME: 'runner-abc', CLAUDE_CODE_REMOTE: 'true' })
+  const titles: string[] = []
+  on('tool.call', (_, e) => {
+    titles.push((e as { title?: string }).title ?? '')
+    return { result: {} }
+  })
+  await $.tool.call({ tool: 'mcp__hearthbot__rename_thread', title: 'Fix Safari export' } as never)
+  await $.tool.call({ tool: 'mcp__hearthbot__rename_thread', title: '☁ Fix Safari export' } as never)
+  expect(titles).toEqual(['☁ Fix Safari export', '☁ Fix Safari export'])
+})
+
+test('on the laptop, thread titles stay as they are', async ($, on) => {
+  mock.env(on, { HOSTNAME: 'my-laptop' })
+  const titles: string[] = []
+  on('tool.call', (_, e) => {
+    titles.push((e as { title?: string }).title ?? '')
+    return { result: {} }
+  })
+  await $.tool.call({ tool: 'mcp__hearthbot__rename_thread', title: 'Fix Safari export' } as never)
+  expect(titles).toEqual(['Fix Safari export'])
+})
+
+test('in a cloud thread, the model is asked to mark it; outside a thread, not', async ($, on) => {
+  mock.env(on, { CLAUDE_CODE_REMOTE: 'true', HOSTNAME: 'c' })
+  on('prompt.compose', () => ({ sections: [] }))
+  const { sections } = await $.prompt.compose({
+    ...COMPOSE,
+    tools: ['Bash', 'mcp__hearthbot__rename_thread'],
+  })
+  expect(sections.map(s => s.id)).toContain('whereami:mark-title')
+  const solo = await $.prompt.compose({ ...COMPOSE, tools: ['Bash'] })
+  expect(solo.sections).toEqual([])
+})
+
+test('on the laptop, the system prompt is left alone', async ($, on) => {
+  mock.env(on, { HOSTNAME: 'my-laptop' })
+  on('prompt.compose', () => ({ sections: [] }))
+  const { sections } = await $.prompt.compose({
+    ...COMPOSE,
+    tools: ['mcp__hearthbot__rename_thread'],
+  })
+  expect(sections).toEqual([])
 })
